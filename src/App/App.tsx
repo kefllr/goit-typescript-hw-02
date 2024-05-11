@@ -2,13 +2,13 @@ import { useEffect, useState, useRef } from 'react'
 import './App.css'
 import axios from "axios";
 
-import SearchBar from './components/SearchBar/SearchBar';
-import ImageGallery from './components/ImageGallery/ImageGallery';
-import Loader from './components/Loader/Loader';
-import ErrorMessage from './components/ErrorMessage/ErrorMessage';
-import LoadMoreBtn from './components/LoadMoreBtn/LoadMoreBtn';
-import { pagination, ACCESS_KEY, initModImg } from './api';
-import ImageModal from './components/ImageModal/ImageModal';
+import SearchBar from '../components/SearchBar/SearchBar';
+import ImageGallery from '../components/ImageGallery/ImageGallery';
+import Loader from '../components/Loader/Loader';
+import ErrorMessage from '../components/ErrorMessage/ErrorMessage';
+import LoadMoreBtn from '../components/LoadMoreBtn/LoadMoreBtn';
+import { pagination, ACCESS_KEY, initModImg } from '../api';
+import ImageModal from '../components/ImageModal/ImageModal';
 
 function App() {
   const [query, setQuery] = useState("");

@@ -1,30 +1,40 @@
-import { useEffect, useState, useRef } from 'react'
-import './App.css'
-import axios from "axios";
+import { useState, useEffect, useRef } from "react";
+import "./App.css";
 
-import SearchBar from '../components/SearchBar/SearchBar';
-import ImageGallery from '../components/ImageGallery/ImageGallery';
-import Loader from '../components/Loader/Loader';
-import ErrorMessage from '../components/ErrorMessage/ErrorMessage';
-import LoadMoreBtn from '../components/LoadMoreBtn/LoadMoreBtn';
-import { pagination, ACCESS_KEY, initModImg } from '../api';
-import ImageModal from '../components/ImageModal/ImageModal';
+import toast from "react-hot-toast";
+import SearchBar from "../components/SearchBar/SearchBar.js";
+import Loader from "../components/Loader/Loader.js";
+import ErrorMessage from "../components/ErrorMessage/ErrorMessage.js";
+import ImageGallery from "../components/ImageGallery/ImageGallery.js";
+import LoadMoreBtn from "../components/LoadMoreBtn/LoadMoreBtn.js";
+import ImageModal from "../components/ImageModal/ImageModal";
+import { initModImg, pagination } from "../api.js";
+import { fetchImagesSearch } from "../api";
+import { Photo, ModImg } from "./App.types.js";
+
+const message = () =>
+  toast("There are no images. Please enter another request", {
+    duration: 4000,
+    position: "top-left",
+    style: {
+      borderRadius: "10px",
+      background: "#387ce1",
+      color: "#fff",
+    },
+  });
 
 function App() {
-  const [query, setQuery] = useState("");
-  const [images, setImages] = useState([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [query, setQuery] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isError, setIsError] = useState<boolean>(false);
+  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
+  const [imageModal, setImageModal] = useState<ModImg | undefined>(initModImg);
+  const [maxPage, setMaxPage] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const [pageNumber, setPageNumber] = useState(1);
-  const [maxPage, setMaxPage] = useState(0);
-
-  const [isError, setIsError] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [imageModal, setImageModal] = useState(initModImg);
-
-  const listRef = useRef(null);
-  const scrollHeight = useRef(0);
+  const listRef = useRef<HTMLUListElement>(null);
+  const scrollHeight = useRef<number>(0);
 
   useEffect(() => {
     if (!listRef.current) return;
@@ -33,65 +43,69 @@ function App() {
       top: scrollHeight.current,
     });
     scrollHeight.current = listRef.current.clientHeight;
-  }, [images]);
+  }, [photos]);
 
-  const handleModal = (id) => {
-    setImageModal(images.find((image) => image.id === id));
-    setModalIsOpen(true);
-  };
+  const loadMore = (): void => setCurrentPage((prev) => prev + 1);
 
-  const onSearch = (search) => {
-    if (search.trim() !== '') { 
-      setQuery(search.trim());
-      setPageNumber(1);
-      setImages([]); 
+  const handleModal = (id: string): void => {
+    {
+      setImageModal(
+        photos.find((photo) => {
+          return photo.id === id;
+        })
+      );
+      setModalIsOpen(true);
     }
   };
-
+  const onSearchQuery = (searchTerm: string): void => {
+    if (query !== searchTerm) {
+      setPhotos([]);
+      setCurrentPage(1);
+      setQuery(searchTerm);
+    }
+  };
   useEffect(() => {
-    if(!query)return
-    const fetchImages = async () => {
+    async function fetchImages() {
       try {
-        setLoading(true);
-        const response = await axios.get(`https://api.unsplash.com/search/photos`, {
-          params: {
-            query: query,
-            per_page: pagination,
-            page: pageNumber,
-            client_id: ACCESS_KEY,
-          }
-        });
-        if(pageNumber === 1){
-          setImages(response.data.results);
-        }else{
-          setImages(prevImages => [...prevImages, ...response.data.results]);
-        } 
-        setMaxPage(Math.ceil(response.data.total / pagination)); 
+        setIsLoading(true);
+        const response = await fetchImagesSearch(
+          query,
+          currentPage,
+          pagination
+        );
+        setMaxPage(response.total_pages);
+        setPhotos((photos) => [...photos, ...response.results]);
+        if (response.total_pages === 0) {
+          message();
+        }
       } catch (error) {
         setIsError(true);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
-    };
-    fetchImages();
-  }, [query, pageNumber]);
-
-  const loadMore = () => {
-    setPageNumber((prev) => prev + 1);  
-  };
+    }
+    if (query !== "") {
+      fetchImages();
+    }
+  }, [query, currentPage]);
 
   return (
-    <>
-      <SearchBar onSearch={onSearch} />
-      {loading && <Loader />}
+    <div>
+      <SearchBar onSubmit={onSearchQuery} />
+      {isLoading && <Loader />}
       {isError && <ErrorMessage />}
-      <ImageGallery images={images} openModal={handleModal} ref={listRef} />
-      {images.length !== 0 && 
-      pageNumber < maxPage && 
-      (<LoadMoreBtn onLoadMore={loadMore} />)}
-      <ImageModal isOpen={modalIsOpen} imageModal={imageModal} onClose={() => setModalIsOpen(false)} />
-    </>
+      {photos.length !== 0 && (
+        <ImageGallery photos={photos} openModal={handleModal} ref={listRef} />
+      )}
+      {photos.length !== 0 && currentPage < maxPage && (
+        <LoadMoreBtn onLoadMore={loadMore} />
+      )}
+      <ImageModal
+        isOpen={modalIsOpen}
+        imageModal={imageModal}
+        onClose={() => setModalIsOpen(false)}
+      />
+    </div>
   );
 }
-
 export default App;

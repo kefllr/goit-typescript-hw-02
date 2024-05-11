@@ -1,13 +1,21 @@
-import React from 'react';
-import { Circles } from 'react-loader-spinner'; 
+import { BallTriangle } from "react-loader-spinner";
 import css from "./Loader.module.css";
 
-function Loader() {
+const Loader = () => {
   return (
     <div className={css.loader}>
-      <Circles type="Puff" color="#00BFFF" height={60} width={60} />
+      <BallTriangle
+        height={100}
+        width={100}
+        radius={5}
+        color="#387ce1"
+        ariaLabel="ball-triangle-loading"
+        wrapperStyle={{}}
+        wrapperClass=""
+        visible={true}
+      />
     </div>
   );
-}
-// className={styles.loader}
+};
+
 export default Loader;

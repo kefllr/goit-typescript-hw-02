@@ -1,35 +1,32 @@
-// {/* <ul>
-// 	{/* Набір елементів списку із зображеннями */}
-// 	<li>
-// 		<div>
-// 		  <img src="" alt="" />
-// 		</div>
-// 	</li>
-// </ul> */}
 import ImageCard from "../ImageCard/ImageCard";
 import { forwardRef } from "react";
 import css from "./ImageGallery.module.css";
+import { Photo } from "../../App/App.types";
 
-const ImageGallery = forwardRef(function ImageGallery(
-    { images, openModal },
-    ref
-  ) {
+interface ImageGalleryProps {
+  photos: Photo[];
+  openModal: (id: string) => void;
+}
+
+const ImageGallery = forwardRef<HTMLUListElement, ImageGalleryProps>(
+  function ImageGallery({ photos, openModal }, ref) {
     return (
       <ul className={css.gallery} ref={ref}>
-        {images.map((image) => {
+        {photos.map(({ id, alt_description, urls }) => {
           return (
-            <li className={css.galleryItem} key={image.id}>
+            <li className={css.galleryItem} key={id}>
               <ImageCard
-                id={image.id}
-                description={image.alt_description}
-                small={image.urls.small}
-                openModal={openModal}   
+                id={id}
+                alt_description={alt_description}
+                small={urls.small}
+                openModal={openModal}
               />
             </li>
           );
         })}
       </ul>
     );
-  });
-  
-  export default ImageGallery;
+  }
+);
+
+export default ImageGallery;
